@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "Game": {
+      "title": "Game",
+      "description": "A user-created 3D game world configuration and metadata.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "genre": { "type": "string" },
+        "thumbnailUrl": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "creatorName": { "type": "string" },
+        "likes": { "type": "number" },
+        "plays": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "config": { "type": "object" }
+      },
+      "required": ["title", "creatorId", "config", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Private user profile data containing PII.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["name", "email", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/games/{gameId}": {
+      "schema": "Game",
+      "description": "Stores all published game worlds."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Private user profiles (PII restricted)."
+    }
+  }
+}

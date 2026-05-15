@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Entity Validations
+    function isValidGame(data) {
+      return data.title is string && data.title.size() >= 1 && data.title.size() <= 500
+          && data.creatorId == request.auth.uid
+          && data.createdAt is number
+          && data.config is map;
+    }
+
+    function isValidUser(data) {
+      return data.name is string && data.name.size() >= 1 && data.name.size() <= 100
+          && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+          && data.createdAt is number;
+    }
+
+    // Users Collection (PII restricted)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow create: if isValidId(userId) && isOwner(userId) && isValidUser(incoming());
+      allow update: if isValidId(userId) && isOwner(userId) && isValidUser(incoming())
+                    && incoming().email == existing().email; // Immutable email
+    }
+
+    // Games Collection
+    match /games/{gameId} {
+      // Path Hardening
+      allow get: if isValidId(gameId);
+      allow list: if true;
+      
+      allow create: if isSignedIn() 
+          && isValidId(gameId)
+          && isValidGame(incoming())
+          && incoming().keys().hasAll(['title', 'creatorId', 'config', 'createdAt'])
+          && incoming().keys().size() >= 4;
+
+      allow update: if isValidId(gameId) && (
+        // Owner Update: Full control over non-immutable fields
+        (isSignedIn() && isOwner(existing().creatorId) && isValidGame(incoming()) && incoming().creatorId == existing().creatorId) ||
+        // Metric Update: Anyone can increment plays/likes
+        (incoming().diff(existing()).affectedKeys().hasOnly(['plays', 'likes']) 
+         && (incoming().plays is number || incoming().likes is number))
+      );
+
+      allow delete: if isValidId(gameId) && isOwner(existing().creatorId);
+    }
+  }
+}

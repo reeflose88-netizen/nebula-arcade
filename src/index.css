@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  /* Vibrant Palette Colors */
+  --color-indigo-950: #0f1235;
+  --color-indigo-900: #1e1b4b;
+  --color-indigo-800: #312e81;
+}
+
+body {
+  background-color: var(--color-indigo-950);
+  background-image: radial-gradient(circle at top right, rgba(236, 72, 153, 0.05), transparent),
+                    radial-gradient(circle at bottom left, rgba(34, 211, 238, 0.05), transparent);
+}
+
